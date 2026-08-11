@@ -4,6 +4,7 @@ import { CartProvider } from './context/CartContext';
 import { MainLayout } from './components/MainLayout';
 import { Home } from './pages/Home';
 import { Shop } from './pages/Shop';
+import { ProductDetail } from './pages/ProductDetail';
 import { GenericPage } from './pages/GenericPage';
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
           <Route path="/" element={<MainLayout />}>
             <Route index element={<Home />} />
             <Route path="shop" element={<Shop />} />
+            <Route path="product/:id" element={<ProductDetail />} />
             <Route path="new-in" element={<GenericPage title="New Arrivals" subtitle="Discover the newest clothing trends, modern drops, and seasonal arrivals." />} />
             <Route path="collections" element={<GenericPage title="Featured Collections" subtitle="Explore curated capsule wardrobes and exclusive StyleAura lookbooks." />} />
             <Route path="about" element={<GenericPage title="About StyleAura" subtitle="Empowering fashion lovers with modern aesthetic apparel and ethical craftsmanship." />} />

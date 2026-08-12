@@ -15,8 +15,8 @@ export const Button = ({
 
   // Variant styling
   const variants = {
-    primary: 'bg-primary hover:bg-primary-dark text-white shadow-md shadow-primary/25 hover:shadow-lg hover:shadow-primary/35 active:scale-[0.98]',
-    secondary: 'bg-white hover:bg-neutral-50 text-neutral-900 border border-neutral-200 shadow-sm hover:shadow-md active:scale-[0.98]',
+    primary: 'bg-primary hover:bg-primary/95 text-white font-bold shadow-lg shadow-primary/35 hover:shadow-xl hover:shadow-primary/45 active:scale-[0.98]',
+    secondary: 'bg-white hover:bg-neutral-50 text-neutral-900 border border-neutral-200/80 shadow-md shadow-neutral-200/50 hover:shadow-lg active:scale-[0.98]',
     outline: 'bg-transparent text-neutral-800 border-2 border-neutral-300 hover:border-primary hover:text-primary active:scale-[0.98]',
   };
 

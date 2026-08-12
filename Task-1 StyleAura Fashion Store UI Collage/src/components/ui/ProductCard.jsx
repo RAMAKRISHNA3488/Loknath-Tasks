@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { Heart, ShoppingBag } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Heart, ShoppingBag, Check } from 'lucide-react';
 import { Badge } from './Badge';
 import { Button } from './Button';
 
@@ -17,24 +18,44 @@ export const ProductCard = ({
   className = '',
 }) => {
   const [wishlisted, setWishlisted] = useState(isWishlisted);
+  const [added, setAdded] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    setWishlisted(isWishlisted);
+  }, [isWishlisted]);
+
+  const handleCardClick = () => {
+    if (id) {
+      navigate(`/product/${id}`);
+    }
+  };
 
   const handleWishlistClick = (e) => {
+    e.preventDefault();
     e.stopPropagation();
-    setWishlisted(!wishlisted);
+    const nextState = !wishlisted;
+    setWishlisted(nextState);
     if (onToggleWishlist) {
       onToggleWishlist({ id, title, price, image });
     }
   };
 
   const handleAddToCartClick = (e) => {
+    e.preventDefault();
     e.stopPropagation();
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1500);
     if (onAddToCart) {
       onAddToCart({ id, title, price, image });
     }
   };
 
   return (
-    <div className={`group bg-white rounded-3xl p-3 sm:p-4 border border-neutral-200/80 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 flex flex-col justify-between ${className}`}>
+    <div
+      onClick={handleCardClick}
+      className={`group bg-white rounded-3xl p-3 sm:p-4 border border-neutral-200/80 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 flex flex-col justify-between cursor-pointer ${className}`}
+    >
       
       {/* Top Image Container */}
       <div className="relative aspect-[4/5] w-full bg-neutral-100 rounded-2xl overflow-hidden flex items-center justify-center">
@@ -62,22 +83,35 @@ export const ProductCard = ({
 
         {/* Floating Heart Icon Button */}
         <button
+          type="button"
           onClick={handleWishlistClick}
-          aria-label="Add to Wishlist"
-          className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center text-neutral-700 hover:text-primary hover:bg-white shadow-sm transition-all"
+          aria-label={wishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+          className={`absolute top-3 right-3 z-10 w-9 h-9 rounded-full flex items-center justify-center shadow-md transition-all duration-300 ${
+            wishlisted
+              ? 'bg-red-50 border border-red-200 text-primary scale-105'
+              : 'bg-white/80 backdrop-blur-md text-neutral-600 hover:text-primary hover:bg-white'
+          }`}
         >
-          <Heart className={`w-4 h-4 transition-colors ${wishlisted ? 'fill-primary text-primary' : ''}`} />
+          <Heart className={`w-4 h-4 transition-all duration-300 ${wishlisted ? 'fill-primary text-primary scale-110' : ''}`} />
         </button>
 
         {/* Quick Add Overlay Button */}
         <div className="absolute inset-x-3 bottom-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <Button
-            variant="primary"
+            variant={added ? 'secondary' : 'primary'}
             size="sm"
             onClick={handleAddToCartClick}
-            className="w-full shadow-lg shadow-primary/30 py-2 text-xs"
+            className={`w-full shadow-lg py-2 text-xs transition-all ${added ? 'bg-emerald-500 text-white border-emerald-500 hover:bg-emerald-600' : 'shadow-primary/30'}`}
           >
-            <ShoppingBag className="w-3.5 h-3.5 mr-1" /> Add to Bag
+            {added ? (
+              <>
+                <Check className="w-3.5 h-3.5 mr-1" /> Added to Bag
+              </>
+            ) : (
+              <>
+                <ShoppingBag className="w-3.5 h-3.5 mr-1" /> Add to Bag
+              </>
+            )}
           </Button>
         </div>
       </div>

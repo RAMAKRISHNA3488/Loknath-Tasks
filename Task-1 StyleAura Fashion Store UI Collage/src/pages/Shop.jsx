@@ -1,23 +1,23 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { SlidersHorizontal, ArrowUpDown, Filter, X, Check } from 'lucide-react';
-import { ProductCard, Button, Badge } from '../components/ui';
-import { useCart } from '../context/CartContext';
+import React, { useState, useMemo } from 'react';
+import { SlidersHorizontal, ArrowUpDown, Filter, X, Check, Search } from 'lucide-react';
+import { ProductCard, Button } from '../components/ui';
+import { useApp } from '../context/AppContext';
+import { products } from '../data/productsData';
 
 export const Shop = () => {
-  const { addToCart, toggleWishlist } = useCart();
+  const { addToCart, toggleWishlist, wishlist, searchQuery, setSearchQuery } = useApp();
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedPrice, setSelectedPrice] = useState('all');
   const [selectedColor, setSelectedColor] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
-  const [priceSlider, setPriceSlider] = useState(200);
+  const [priceSlider, setPriceSlider] = useState(1000);
   const [sortBy, setSortBy] = useState('newest');
 
   const categories = ["All", "Women's Wear", "Footwear", "Accessories", "Bags", "Jackets"];
-  
+
   const colors = [
-    { name: 'Pink', hex: '#FF2B70' },
+    { name: 'Red', hex: '#E5094C' },
     { name: 'Black', hex: '#121214' },
     { name: 'White', hex: '#FFFFFF' },
     { name: 'Beige', hex: '#E5D3B3' },
@@ -27,104 +27,78 @@ export const Shop = () => {
 
   const sizes = ['XS', 'S', 'M', 'L', 'XL'];
 
-  const productsData = [
-    {
-      id: 1,
-      title: 'Pink Oversized Cotton Casual Shirt',
-      price: 49.99,
-      originalPrice: 69.99,
-      discount: '-29%',
-      category: "Women's Wear",
-    },
-    {
-      id: 2,
-      title: 'StyleAura Signature Denim Jacket',
-      price: 110.00,
-      originalPrice: 135.00,
-      discount: '-18%',
-      category: 'Jackets',
-    },
-    {
-      id: 3,
-      title: 'Chic Chunky Leather Platform Sneakers',
-      price: 145.00,
-      category: 'Footwear',
-    },
-    {
-      id: 4,
-      title: 'Handcrafted Quilted Chain Shoulder Bag',
-      price: 95.00,
-      originalPrice: 125.00,
-      discount: '-24%',
-      category: 'Bags',
-    },
-    {
-      id: 5,
-      title: 'Aesthetic Linen Button-Down Shirt',
-      price: 64.99,
-      category: "Women's Wear",
-    },
-    {
-      id: 6,
-      title: 'Urban Streetwear Hooded Sweatshirt',
-      price: 79.99,
-      originalPrice: 99.99,
-      discount: '-20%',
-      category: 'Jackets',
-    },
-    {
-      id: 7,
-      title: 'Statement Gold Hoop Earrings Set',
-      price: 35.00,
-      category: 'Accessories',
-    },
-    {
-      id: 8,
-      title: 'Vintage High-Waisted Wide Leg Jeans',
-      price: 88.00,
-      originalPrice: 105.00,
-      discount: '-16%',
-      category: "Women's Wear",
-    },
-    {
-      id: 9,
-      title: 'Minimalist Leather Ankle Boots',
-      price: 159.00,
-      category: 'Footwear',
-    },
-  ];
+  // Dynamic Filtering Logic with Search Query matching
+  const filteredProducts = useMemo(() => {
+    return products.filter((prod) => {
+      // Search Query Filter
+      if (searchQuery && searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const matchesTitle = prod.title.toLowerCase().includes(q);
+        const matchesCategory = prod.category.toLowerCase().includes(q);
+        const matchesSub = prod.subcategory && prod.subcategory.toLowerCase().includes(q);
+        const matchesDesc = prod.description && prod.description.toLowerCase().includes(q);
+        if (!matchesTitle && !matchesCategory && !matchesSub && !matchesDesc) {
+          return false;
+        }
+      }
+
+      // Category Filter
+      if (selectedCategory !== 'All' && prod.category !== selectedCategory && prod.subcategory !== selectedCategory) {
+        return false;
+      }
+      // Price Slider
+      if (prod.price > priceSlider) return false;
+      // Price Radio Filter
+      if (selectedPrice === '0-50' && (prod.price < 0 || prod.price > 50)) return false;
+      if (selectedPrice === '50-100' && (prod.price < 50 || prod.price > 100)) return false;
+      if (selectedPrice === '100-200' && (prod.price < 100 || prod.price > 200)) return false;
+      if (selectedPrice === '200+' && prod.price < 200) return false;
+      // Color Filter
+      if (selectedColor && !prod.colors.includes(selectedColor)) return false;
+      // Size Filter
+      if (selectedSize && !prod.sizes.includes(selectedSize)) return false;
+
+      return true;
+    }).sort((a, b) => {
+      if (sortBy === 'price-low') return a.price - b.price;
+      if (sortBy === 'price-high') return b.price - a.price;
+      return a.id - b.id;
+    });
+  }, [searchQuery, selectedCategory, priceSlider, selectedPrice, selectedColor, selectedSize, sortBy]);
 
   const resetFilters = () => {
     setSelectedCategory('All');
     setSelectedPrice('all');
     setSelectedColor('');
     setSelectedSize('');
-    setPriceSlider(200);
+    setPriceSlider(1000);
+    setSearchQuery('');
   };
 
   return (
-    <div className="space-y-8 py-2">
+    <div className="w-full py-2 space-y-6">
       
-      {/* Shop Header Banner */}
-      <div className="bg-gradient-to-r from-neutral-900 via-neutral-800 to-brand-gray text-white rounded-3xl p-8 sm:p-12 shadow-xl relative overflow-hidden">
-        <div className="relative z-10 max-w-xl space-y-3">
-          <span className="text-primary text-xs font-extrabold uppercase tracking-wider bg-primary/20 px-3.5 py-1.5 rounded-full border border-primary/30 inline-block">
-            Curated Fashion Catalog
-          </span>
-          <h1 className="text-3xl sm:text-5xl font-black tracking-tight">
-            StyleAura <span className="text-primary">Shop</span>
-          </h1>
-          <p className="text-neutral-300 text-sm sm:text-base leading-relaxed">
-            Discover tailored looks, trending streetwear, and timeless luxury wardrobe essentials.
-          </p>
+      {/* Active Search Query Banner */}
+      {searchQuery && searchQuery.trim() && (
+        <div className="bg-red-50 border border-red-200 p-4 rounded-2xl flex items-center justify-between gap-4 w-full">
+          <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-neutral-800">
+            <Search className="w-4 h-4 text-primary" />
+            <span>Search results for: <strong className="text-primary font-black">"{searchQuery}"</strong></span>
+          </div>
+          <button
+            onClick={() => setSearchQuery('')}
+            className="text-xs font-bold text-neutral-500 hover:text-primary flex items-center gap-1 bg-white px-3 py-1.5 rounded-full border border-neutral-200 shadow-sm"
+          >
+            Clear Search <X className="w-3.5 h-3.5" />
+          </button>
         </div>
-      </div>
+      )}
 
-      {/* Main Two-Column Layout */}
-      <div className="flex flex-col lg:flex-row gap-8 items-start">
+      {/* Main Two-Column Layout: Fixed 270px Sidebar + All Remaining Width for Product Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-[270px_minmax(0,1fr)] gap-8 items-start w-full">
         
-        {/* LEFT SIDEBAR FILTERS (approx 25% width) */}
-        <aside className="hidden lg:block w-64 shrink-0 bg-white p-6 rounded-3xl border border-neutral-200/80 shadow-sm space-y-8 sticky top-24">
+        {/* LEFT SIDEBAR FILTERS (Fixed 270px width) */}
+        <aside className="hidden lg:block w-[270px] shrink-0 bg-white p-6 rounded-3xl border border-neutral-200/80 shadow-sm space-y-8 sticky top-24">
           <div className="flex items-center justify-between pb-4 border-b border-neutral-100">
             <h2 className="font-extrabold text-neutral-900 text-base flex items-center gap-2">
               <SlidersHorizontal className="w-4 h-4 text-primary" /> Filters
@@ -137,7 +111,7 @@ export const Shop = () => {
             </button>
           </div>
 
-          {/* 1. Categories List with Radio Buttons */}
+          {/* Categories Radio List */}
           <div className="space-y-3">
             <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Categories</h3>
             <div className="space-y-2">
@@ -161,7 +135,7 @@ export const Shop = () => {
             </div>
           </div>
 
-          {/* 2. Price Range Slider & Options */}
+          {/* Price Range Slider */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Price Range</h3>
@@ -170,24 +144,24 @@ export const Shop = () => {
             <input
               type="range"
               min="0"
-              max="300"
+              max="1000"
               value={priceSlider}
               onChange={(e) => setPriceSlider(Number(e.target.value))}
               className="w-full accent-primary bg-neutral-200 rounded-lg h-1.5 cursor-pointer"
             />
             <div className="space-y-2 pt-1 text-sm text-neutral-700">
               {[
-                { label: 'All Prices', val: 'all' },
                 { label: '$0 - $50', val: '0-50' },
                 { label: '$50 - $100', val: '50-100' },
                 { label: '$100 - $200', val: '100-200' },
+                { label: '$200+', val: '200+' },
               ].map((opt) => (
                 <label key={opt.val} className="flex items-center gap-3 cursor-pointer hover:text-primary">
                   <input
                     type="radio"
                     name="price"
                     checked={selectedPrice === opt.val}
-                    onChange={() => setSelectedPrice(opt.val)}
+                    onChange={() => setSelectedPrice(selectedPrice === opt.val ? 'all' : opt.val)}
                     className="accent-primary w-4 h-4"
                   />
                   <span>{opt.label}</span>
@@ -196,7 +170,7 @@ export const Shop = () => {
             </div>
           </div>
 
-          {/* 3. Color Swatches */}
+          {/* Color Swatches */}
           <div className="space-y-3">
             <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Color</h3>
             <div className="flex flex-wrap gap-2.5">
@@ -218,7 +192,7 @@ export const Shop = () => {
             </div>
           </div>
 
-          {/* 4. Size Square Buttons */}
+          {/* Size Buttons */}
           <div className="space-y-3">
             <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Size</h3>
             <div className="flex flex-wrap gap-2">
@@ -226,7 +200,7 @@ export const Shop = () => {
                 <button
                   key={s}
                   onClick={() => setSelectedSize(selectedSize === s ? '' : s)}
-                  className={`w-10 h-10 rounded-xl font-bold text-xs border transition-all ${
+                  className={`w-9 h-9 rounded-xl font-bold text-xs border transition-all ${
                     selectedSize === s
                       ? 'bg-primary text-white border-primary shadow-md shadow-primary/25'
                       : 'bg-neutral-50 text-neutral-700 border-neutral-200 hover:border-neutral-400'
@@ -239,25 +213,23 @@ export const Shop = () => {
           </div>
         </aside>
 
-        {/* MAIN PRODUCT AREA (75% width) */}
-        <main className="flex-1 w-full space-y-6">
+        {/* MAIN PRODUCT AREA (Consumes ALL remaining width) */}
+        <main className="w-full min-w-0 space-y-6">
           
-          {/* Top Bar Controls */}
-          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-neutral-200/80 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-            
-            <div className="flex items-center justify-between w-full sm:w-auto gap-4">
-              <button
-                onClick={() => setMobileFiltersOpen(true)}
-                className="lg:hidden flex items-center gap-2 text-xs font-bold text-neutral-800 bg-neutral-100 hover:bg-neutral-200 px-4 py-2 rounded-xl"
-              >
-                <Filter className="w-4 h-4 text-primary" /> Filters
-              </button>
-              <span className="text-xs sm:text-sm font-semibold text-neutral-500">
-                Showing <strong className="text-neutral-900">1-9</strong> of <strong className="text-neutral-900">90</strong> results
-              </span>
-            </div>
+          {/* Top Bar Controls (100% width of product area) */}
+          <div className="bg-white p-4 rounded-2xl border border-neutral-200/80 shadow-sm flex items-center justify-between gap-4 w-full">
+            <button
+              onClick={() => setMobileFiltersOpen(true)}
+              className="lg:hidden flex items-center gap-2 text-xs font-bold text-neutral-800 bg-neutral-100 hover:bg-neutral-200 px-4 py-2 rounded-xl"
+            >
+              <Filter className="w-4 h-4 text-primary" /> Filters
+            </button>
 
-            <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-neutral-700 w-full sm:w-auto justify-end">
+            <span className="hidden sm:inline text-xs text-neutral-500 font-semibold">
+              Showing {filteredProducts.length} items
+            </span>
+
+            <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-neutral-700 ml-auto">
               <ArrowUpDown className="w-4 h-4 text-primary" />
               <span>Sort by:</span>
               <select
@@ -265,27 +237,34 @@ export const Shop = () => {
                 onChange={(e) => setSortBy(e.target.value)}
                 className="bg-neutral-100 border border-neutral-200 text-neutral-800 text-xs font-bold rounded-xl px-3 py-2 focus:outline-none focus:border-primary"
               >
-                <option value="newest">Newest Arrivals</option>
+                <option value="newest">Newest</option>
                 <option value="price-low">Price: Low to High</option>
                 <option value="price-high">Price: High to Low</option>
-                <option value="popular">Most Popular</option>
               </select>
             </div>
-
           </div>
 
           {/* 3-Column Responsive Product Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {productsData.map((prod) => (
-              <Link key={prod.id} to={`/product/${prod.id}`} className="block group">
+          {filteredProducts.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7 w-full">
+              {filteredProducts.map((prod) => (
                 <ProductCard
+                  key={prod.id}
                   {...prod}
+                  isWishlisted={wishlist.some((item) => item.id === prod.id)}
                   onAddToCart={addToCart}
                   onToggleWishlist={toggleWishlist}
                 />
-              </Link>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16 bg-white rounded-3xl border border-neutral-200 space-y-4 w-full">
+              <p className="text-neutral-500 font-semibold">No products match your selected search or filters.</p>
+              <Button variant="primary" size="sm" onClick={resetFilters}>
+                Reset Filters & Search
+              </Button>
+            </div>
+          )}
 
         </main>
 
@@ -296,9 +275,7 @@ export const Shop = () => {
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex justify-end">
           <div className="w-full max-w-xs bg-white h-full p-6 overflow-y-auto space-y-6 animate-in slide-in-from-right duration-200">
             <div className="flex items-center justify-between pb-4 border-b border-neutral-100">
-              <h2 className="font-extrabold text-neutral-900 text-base flex items-center gap-2">
-                <SlidersHorizontal className="w-4 h-4 text-primary" /> Filter Products
-              </h2>
+              <h2 className="font-extrabold text-neutral-900 text-base">Filter Products</h2>
               <button onClick={() => setMobileFiltersOpen(false)} className="text-neutral-400 hover:text-neutral-700">
                 <X className="w-6 h-6" />
               </button>

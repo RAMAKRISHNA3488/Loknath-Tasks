@@ -8,10 +8,10 @@ export default {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#FF2B70',
-          dark: '#E91E63',
-          light: '#FF6598',
-          soft: '#FFF0F5',
+          DEFAULT: '#E5094C', // Primary Red
+          dark: '#C80036',    // Hover/Darker Red
+          light: '#FF4D79',   // Light Red Accent
+          soft: '#FFF0F3',    // Soft Light Red Background
         },
         brand: {
           dark: '#121214',
@@ -26,5 +26,3 @@ export default {
   },
   plugins: [],
 }
-
-

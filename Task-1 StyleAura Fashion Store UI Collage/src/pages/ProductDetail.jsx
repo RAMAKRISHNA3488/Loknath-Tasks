@@ -1,64 +1,57 @@
 import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { Star, Heart, ShoppingBag, Truck, RotateCcw, ShieldCheck, Minus, Plus, ChevronDown, Sparkles } from 'lucide-react';
-import { Button, Badge } from '../components/ui';
-import { useCart } from '../context/CartContext';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { Star, Heart, ShoppingBag, Truck, RotateCcw, Minus, Plus, ChevronDown } from 'lucide-react';
+import { useApp } from '../context/AppContext';
+import { products } from '../data/productsData';
+
+import pinkShirtImg from '../assets/product-pink-shirt.png';
+import modelDetailImg from '../assets/model-detail.png';
 
 export const ProductDetail = () => {
   const { id } = useParams();
-  const { addToCart, toggleWishlist } = useCart();
+  const navigate = useNavigate();
+  const { addToCart, toggleWishlist, wishlist } = useApp();
 
-  const [selectedColor, setSelectedColor] = useState('Pink');
-  const [selectedSize, setSelectedSize] = useState('M');
+  const product = products.find((p) => p.id === Number(id)) || products[0];
+
+  const [selectedColor, setSelectedColor] = useState(product.colors?.[0] || 'Pink');
+  const [selectedSize, setSelectedSize] = useState(product.sizes?.[2] || 'M');
   const [quantity, setQuantity] = useState(1);
-  const [activeThumb, setActiveThumb] = useState(0);
-  const [wishlisted, setWishlisted] = useState(false);
-  const [openAccordion, setOpenAccordion] = useState('details');
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [openAccordion, setOpenAccordion] = useState('');
 
-  const product = {
-    id: id || 1,
-    title: 'Pink Oversized Cotton Casual Shirt',
-    price: 49.99,
-    originalPrice: 69.99,
-    discount: '-29%',
-    rating: 5,
-    reviewsCount: 128,
-    category: "Women's Wear",
-    sku: 'SA-2025-W01',
-    description: 'Designed for effortless elegance and modern aesthetic comfort. Made from 100% breathable organic cotton with loose relaxed tailoring, dropped shoulders, and buttoned cuffs.',
-    colors: [
-      { name: 'Pink', hex: '#FF2B70' },
-      { name: 'Black', hex: '#121214' },
-      { name: 'White', hex: '#FFFFFF' },
-      { name: 'Beige', hex: '#E5D3B3' },
-    ],
-    sizes: ['XS', 'S', 'M', 'L', 'XL'],
-    thumbnails: ['Look 1', 'Look 2', 'Look 3', 'Look 4'],
-  };
+  const galleryImages = [
+    product.image || pinkShirtImg,
+    modelDetailImg,
+    product.image || pinkShirtImg,
+    modelDetailImg,
+    product.image || pinkShirtImg,
+  ];
 
-  const handleQuantityChange = (delta) => {
-    setQuantity((prev) => Math.max(1, prev + delta));
-  };
+  const isWishlisted = wishlist.some((item) => item.id === product.id);
 
   const handleAddToCart = () => {
-    if (addToCart) {
-      for (let i = 0; i < quantity; i++) {
-        addToCart({
-          id: product.id,
-          title: product.title,
-          price: product.price,
-          color: selectedColor,
-          size: selectedSize,
-        });
-      }
-    }
+    addToCart({
+      id: product.id,
+      title: product.title,
+      price: product.price,
+      image: product.image,
+      color: selectedColor,
+      size: selectedSize,
+      quantity,
+    });
+  };
+
+  const handleBuyNow = () => {
+    handleAddToCart();
+    navigate('/checkout');
   };
 
   return (
-    <div className="space-y-10 py-4 max-w-7xl mx-auto">
+    <div className="w-full max-w-[1520px] mx-auto py-2 space-y-8">
       
-      {/* 1. Breadcrumb Navigation */}
-      <nav className="text-xs sm:text-sm text-neutral-500 flex items-center gap-2 font-medium">
+      {/* 1. Breadcrumbs */}
+      <nav className="text-xs text-neutral-500 flex items-center gap-2 font-medium">
         <Link to="/" className="hover:text-primary transition-colors">Home</Link>
         <span>/</span>
         <Link to="/shop" className="hover:text-primary transition-colors">{product.category}</Link>
@@ -66,133 +59,126 @@ export const ProductDetail = () => {
         <span className="text-neutral-900 font-bold truncate">{product.title}</span>
       </nav>
 
-      {/* 2. Main Two-Column Split Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start">
+      {/* 2. Main Widescreen Two-Column Split Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start w-full">
         
-        {/* LEFT COLUMN: Image Gallery Stack & Main Preview */}
-        <div className="lg:col-span-7 flex flex-col-reverse sm:flex-row gap-4">
+        {/* LEFT COLUMN: Gallery & Main Product Image (Expanded ~580-640px) */}
+        <div className="lg:col-span-7 flex flex-row gap-4 w-full items-start justify-center lg:justify-start">
           
-          {/* Vertical 4 Thumbnail Stack */}
-          <div className="flex sm:flex-col gap-3 justify-center sm:justify-start">
-            {product.thumbnails.map((thumb, idx) => (
+          {/* Vertical 5 Thumbnail Stack */}
+          <div className="flex flex-col gap-3 shrink-0">
+            {galleryImages.map((img, idx) => (
               <button
                 key={idx}
-                onClick={() => setActiveThumb(idx)}
-                className={`w-16 h-20 sm:w-20 sm:h-24 rounded-2xl bg-neutral-100 border-2 overflow-hidden flex items-center justify-center text-xs font-bold transition-all ${
-                  activeThumb === idx
-                    ? 'border-primary ring-2 ring-primary/20 scale-105 shadow-md'
-                    : 'border-neutral-200 hover:border-neutral-400 opacity-70 hover:opacity-100'
+                onClick={() => setActiveImageIndex(idx)}
+                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-neutral-50 border-2 overflow-hidden flex items-center justify-center transition-all ${
+                  activeImageIndex === idx
+                    ? 'border-primary ring-2 ring-primary/20 scale-105 shadow-sm'
+                    : 'border-neutral-200/80 hover:border-neutral-400 opacity-70 hover:opacity-100'
                 }`}
               >
-                <div className="text-neutral-500 text-center">
-                  <Sparkles className="w-4 h-4 mx-auto mb-1 text-primary" />
-                  {thumb}
-                </div>
+                <img src={img} alt={`Thumb ${idx}`} className="w-full h-full object-cover" />
               </button>
             ))}
           </div>
 
-          {/* Main Product Image Container */}
-          <div className="flex-1 aspect-[4/5] bg-neutral-100 rounded-3xl border border-neutral-200/80 relative overflow-hidden flex items-center justify-center shadow-lg group">
-            <div className="w-full h-full bg-gradient-to-br from-neutral-100 via-pink-50/30 to-neutral-200 flex flex-col items-center justify-center p-8 text-center text-neutral-400 font-extrabold text-lg">
-              <div className="w-20 h-20 rounded-full bg-white/80 flex items-center justify-center text-primary mb-3 shadow-md">
-                <Sparkles className="w-10 h-10" />
-              </div>
-              <span className="text-neutral-700 font-black">{product.title}</span>
-              <span className="text-xs text-neutral-500 font-normal mt-1">Image Preview View #{activeThumb + 1}</span>
-            </div>
+          {/* Main Product Image Container (Expanded Widescreen Image max-w-[620px]) */}
+          <div className="flex-1 aspect-[4/5] max-w-[620px] min-w-0 bg-red-50/40 rounded-3xl border border-neutral-200/80 relative overflow-hidden flex items-center justify-center shadow-sm">
+            <img
+              src={galleryImages[activeImageIndex]}
+              alt={product.title}
+              className="w-full h-full object-cover object-center"
+            />
 
-            {/* Top Floating Discount Badge & Wishlist Button */}
-            <div className="absolute top-4 left-4">
-              <Badge variant="primary" size="md" className="shadow-md">
-                {product.discount} OFF
-              </Badge>
-            </div>
-
+            {/* Wishlist Heart Button */}
             <button
-              onClick={() => {
-                setWishlisted(!wishlisted);
-                if (toggleWishlist) toggleWishlist(product);
-              }}
-              className="absolute top-4 right-4 z-10 w-11 h-11 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-neutral-700 hover:text-primary shadow-md transition-all"
+              onClick={() => toggleWishlist(product)}
+              className="absolute top-4 right-4 z-10 w-11 h-11 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-neutral-700 hover:text-primary shadow-md transition-all hover:scale-105"
             >
-              <Heart className={`w-5 h-5 ${wishlisted ? 'fill-primary text-primary' : ''}`} />
+              <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-primary text-primary' : ''}`} />
             </button>
           </div>
 
         </div>
 
-        {/* RIGHT COLUMN: Product Info & Actions */}
-        <div className="lg:col-span-5 space-y-6">
+        {/* RIGHT COLUMN: Product Specifications & Control Handlers */}
+        <div className="lg:col-span-5 w-full space-y-6">
           
-          {/* Header & Rating */}
-          <div className="space-y-2 border-b border-neutral-200/80 pb-5">
-            <span className="text-xs font-bold text-primary uppercase tracking-wider">{product.category}</span>
-            <h1 className="text-2xl sm:text-4xl font-black text-neutral-900 tracking-tight leading-snug">
+          {/* Title & Ratings */}
+          <div className="space-y-2 border-b border-neutral-100 pb-5">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-neutral-900 tracking-tight">
               {product.title}
             </h1>
             
             {/* Rating Stars */}
-            <div className="flex items-center gap-3 pt-1">
+            <div className="flex items-center gap-2 pt-0.5">
               <div className="flex items-center text-amber-400">
-                {[...Array(product.rating)].map((_, i) => (
+                {[...Array(product.rating || 5)].map((_, i) => (
                   <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
                 ))}
               </div>
-              <span className="text-xs font-bold text-neutral-700">5.0</span>
-              <span className="text-xs text-neutral-400 font-medium">({product.reviewsCount} verified reviews)</span>
+              <span className="text-xs font-bold text-neutral-800">5.0</span>
+              <span className="text-xs text-neutral-400 font-medium">({product.reviewsCount || 290} reviews)</span>
             </div>
           </div>
 
-          {/* Pricing Section */}
+          {/* Price Section */}
           <div className="flex items-center gap-3">
             <span className="text-3xl font-black text-neutral-900">${product.price.toFixed(2)}</span>
-            <span className="text-lg font-bold text-neutral-400 line-through">${product.originalPrice.toFixed(2)}</span>
-            <Badge variant="soft" size="md">
-              Save ${(product.originalPrice - product.price).toFixed(2)}
-            </Badge>
+            {product.originalPrice && (
+              <span className="text-lg font-bold text-neutral-400 line-through">
+                ${product.originalPrice.toFixed(2)}
+              </span>
+            )}
+            {product.discount && (
+              <span className="bg-primary text-white font-extrabold text-xs px-2.5 py-1 rounded-full shadow-sm">
+                {product.discount}
+              </span>
+            )}
           </div>
 
-          <p className="text-sm text-neutral-600 leading-relaxed font-normal">
+          <p className="text-sm text-neutral-600 leading-relaxed font-medium max-w-xl">
             {product.description}
           </p>
 
-          {/* Color Selector Swatches */}
-          <div className="space-y-2.5 pt-2">
+          {/* Color Selector */}
+          <div className="space-y-2 pt-1">
             <label className="text-xs font-bold text-neutral-900 uppercase tracking-wider block">
-              Color: <span className="text-primary font-black">{selectedColor}</span>
+              COLOR: <span className="text-primary font-black">{selectedColor}</span>
             </label>
             <div className="flex items-center gap-3">
-              {product.colors.map((c) => (
-                <button
-                  key={c.name}
-                  onClick={() => setSelectedColor(c.name)}
-                  style={{ backgroundColor: c.hex }}
-                  className={`w-8 h-8 rounded-full border border-neutral-300 flex items-center justify-center transition-transform hover:scale-110 shadow-sm ${
-                    selectedColor === c.name ? 'ring-2 ring-primary ring-offset-2 scale-110' : ''
-                  }`}
-                />
-              ))}
+              {product.colors.map((c) => {
+                const isSelected = selectedColor === c;
+                const bgHex = (c.toLowerCase() === 'pink' || c.toLowerCase() === 'red') ? '#E5094C' : c.toLowerCase() === 'white' ? '#FFFFFF' : '#121214';
+                return (
+                  <button
+                    key={c}
+                    onClick={() => setSelectedColor(c)}
+                    aria-label={c}
+                    style={{ backgroundColor: bgHex }}
+                    className={`w-8 h-8 rounded-full border border-neutral-300 transition-all ${
+                      isSelected ? 'ring-2 ring-primary ring-offset-2 scale-110 shadow-sm' : 'opacity-80 hover:opacity-100'
+                    }`}
+                  />
+                );
+              })}
             </div>
           </div>
 
-          {/* Size Selector Square Buttons */}
-          <div className="space-y-2.5">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-neutral-900 uppercase tracking-wider">
-                Select Size: <span className="text-primary font-black">{selectedSize}</span>
-              </label>
-              <button className="text-xs font-semibold text-primary underline">Size Guide</button>
-            </div>
+          {/* Size Selector */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-neutral-900 uppercase tracking-wider block">
+              SIZE: <span className="text-primary font-black">{selectedSize}</span>
+            </label>
             <div className="flex flex-wrap gap-2.5">
               {product.sizes.map((s) => (
                 <button
                   key={s}
                   onClick={() => setSelectedSize(s)}
-                  className={`w-12 h-12 rounded-xl font-bold text-sm border transition-all ${
+                  className={`w-11 h-11 rounded-xl font-bold text-xs border transition-all ${
                     selectedSize === s
-                      ? 'bg-primary text-white border-primary shadow-md shadow-primary/25 scale-105'
-                      : 'bg-neutral-50 text-neutral-800 border-neutral-200 hover:border-neutral-400'
+                      ? 'border-2 border-primary text-primary font-black bg-white shadow-sm'
+                      : 'bg-neutral-50 text-neutral-700 border-neutral-200 hover:border-neutral-400'
                   }`}
                 >
                   {s}
@@ -201,96 +187,99 @@ export const ProductDetail = () => {
             </div>
           </div>
 
-          {/* Quantity Counter */}
-          <div className="space-y-2.5 pt-2">
-            <label className="text-xs font-bold text-neutral-900 uppercase tracking-wider block">Quantity</label>
-            <div className="inline-flex items-center bg-neutral-100 rounded-full border border-neutral-200 p-1">
+          {/* Quantity Selector */}
+          <div className="space-y-2 pt-1">
+            <label className="text-xs font-bold text-neutral-900 uppercase tracking-wider block">QUANTITY</label>
+            <div className="inline-flex items-center bg-neutral-50 rounded-2xl border border-neutral-200 p-1 w-36 justify-between">
               <button
-                onClick={() => handleQuantityChange(-1)}
-                className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-neutral-700 hover:text-primary shadow-sm"
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                className="w-8 h-8 rounded-xl bg-white flex items-center justify-center text-neutral-700 hover:text-primary shadow-sm font-bold"
               >
-                <Minus className="w-3.5 h-3.5" />
+                <Minus className="w-4 h-4" />
               </button>
-              <span className="w-12 text-center font-extrabold text-neutral-900 text-sm">{quantity}</span>
+              <span className="font-black text-neutral-900 text-sm">{quantity}</span>
               <button
-                onClick={() => handleQuantityChange(1)}
-                className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-neutral-700 hover:text-primary shadow-sm"
+                onClick={() => setQuantity(quantity + 1)}
+                className="w-8 h-8 rounded-xl bg-white flex items-center justify-center text-neutral-700 hover:text-primary shadow-sm font-bold"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="w-4 h-4" />
               </button>
             </div>
           </div>
 
           {/* Action Buttons: Add to Cart & Buy Now */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
-            <Button
-              variant="outline"
-              size="lg"
+          <div className="flex flex-col sm:flex-row items-center gap-3 pt-3">
+            <button
               onClick={handleAddToCart}
-              className="w-full text-primary border-primary hover:bg-primary hover:text-white"
+              className="w-full sm:flex-1 py-3.5 px-6 rounded-full font-extrabold text-xs uppercase border-2 border-primary text-primary hover:bg-primary/5 transition-all flex items-center justify-center gap-2 shadow-sm"
             >
-              <ShoppingBag className="w-5 h-5 mr-2" /> Add to Cart
-            </Button>
+              <ShoppingBag className="w-4 h-4 text-primary" /> Add to Cart
+            </button>
 
-            <Button variant="primary" size="lg" className="w-full shadow-xl shadow-primary/30">
+            <button
+              onClick={handleBuyNow}
+              className="w-full sm:flex-1 py-3.5 px-6 rounded-full font-extrabold text-xs uppercase bg-primary hover:bg-primary-dark text-white shadow-lg shadow-primary/30 transition-all flex items-center justify-center gap-2"
+            >
               Buy Now
-            </Button>
+            </button>
           </div>
 
-          {/* Features Bar */}
-          <div className="grid grid-cols-3 gap-3 p-4 bg-neutral-50 rounded-2xl border border-neutral-200/80 text-center text-xs font-semibold text-neutral-700">
-            <div className="flex flex-col items-center gap-1">
-              <Truck className="w-5 h-5 text-primary" />
-              <span>Free Shipping</span>
-            </div>
-            <div className="flex flex-col items-center gap-1">
-              <RotateCcw className="w-5 h-5 text-primary" />
-              <span>Easy 30-Day Returns</span>
-            </div>
-            <div className="flex flex-col items-center gap-1">
-              <ShieldCheck className="w-5 h-5 text-primary" />
-              <span>Secure Checkout</span>
-            </div>
-          </div>
-
-          {/* Collapsible Accordion Section */}
-          <div className="border-t border-neutral-200/80 pt-4 space-y-3">
-            {[
-              {
-                id: 'details',
-                title: 'Product Details & Fabric',
-                content: 'Made with 100% premium combed cotton. Features dropped shoulder seam, regular shirt collar, chest pocket, and curved hemline. Machine wash cold with like colors.'
-              },
-              {
-                id: 'size-guide',
-                title: 'Size Guide & Fit',
-                content: 'Model is 5\'9" (175 cm) wearing Size M. Fits true to size with an oversized silhouette. If you prefer a regular fit, consider sizing down.'
-              },
-              {
-                id: 'shipping',
-                title: 'Shipping & Returns Policy',
-                content: 'Standard delivery in 3-5 business days. Express shipping available. Enjoy hassle-free returns within 30 days of receipt.'
-              },
-            ].map((acc) => (
-              <div key={acc.id} className="border border-neutral-200/80 rounded-2xl overflow-hidden">
-                <button
-                  onClick={() => setOpenAccordion(openAccordion === acc.id ? '' : acc.id)}
-                  className="w-full px-5 py-3.5 flex items-center justify-between font-bold text-sm text-neutral-900 bg-white hover:bg-neutral-50"
-                >
-                  <span>{acc.title}</span>
-                  <ChevronDown className={`w-4 h-4 text-neutral-500 transition-transform ${openAccordion === acc.id ? 'rotate-180 text-primary' : ''}`} />
-                </button>
-                {openAccordion === acc.id && (
-                  <div className="px-5 pb-4 pt-1 text-xs text-neutral-600 leading-relaxed bg-white border-t border-neutral-100">
-                    {acc.content}
-                  </div>
-                )}
+          {/* Shipping & Returns Compact Badges */}
+          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-neutral-100">
+            <div className="flex items-center gap-3 text-xs text-neutral-700 font-medium">
+              <Truck className="w-5 h-5 text-neutral-800 shrink-0" />
+              <div>
+                <p className="font-extrabold text-neutral-900">Free Shipping</p>
+                <p className="text-[11px] text-neutral-500">On orders over $50</p>
               </div>
-            ))}
+            </div>
+            <div className="flex items-center gap-3 text-xs text-neutral-700 font-medium">
+              <RotateCcw className="w-5 h-5 text-neutral-800 shrink-0" />
+              <div>
+                <p className="font-extrabold text-neutral-900">Easy Returns</p>
+                <p className="text-[11px] text-neutral-500">30 days return policy</p>
+              </div>
+            </div>
           </div>
 
         </div>
 
+      </div>
+
+      {/* 3. Collapsible Accordions Section Below Main Product Area */}
+      <div className="space-y-3 pt-8 border-t border-neutral-100 w-full">
+        {[
+          {
+            id: 'details',
+            title: 'Product Details',
+            content: product.description || 'Trendy oversized shirt perfect for casual outings. Comfortable breathable cotton fabric with a stylish relaxed look.',
+          },
+          {
+            id: 'size-guide',
+            title: 'Size Guide',
+            content: 'Fits true to size. Designed with a relaxed tailored silhouette. See full size guide table for bust, waist, and hip measurements.',
+          },
+          {
+            id: 'shipping',
+            title: 'Shipping & Returns',
+            content: 'Free standard delivery on orders over $50. Hassle-free 30-day returns and free size exchanges.',
+          },
+        ].map((acc) => (
+          <div key={acc.id} className="border border-neutral-200/90 rounded-2xl overflow-hidden bg-white shadow-sm">
+            <button
+              onClick={() => setOpenAccordion(openAccordion === acc.id ? '' : acc.id)}
+              className="w-full px-6 py-4 flex items-center justify-between font-extrabold text-sm text-neutral-900 hover:text-primary transition-colors"
+            >
+              <span>{acc.title}</span>
+              <ChevronDown className={`w-4 h-4 text-neutral-500 transition-transform duration-200 ${openAccordion === acc.id ? 'rotate-180 text-primary' : ''}`} />
+            </button>
+            {openAccordion === acc.id && (
+              <div className="px-6 pb-5 pt-1 text-xs sm:text-sm text-neutral-600 font-medium leading-relaxed border-t border-neutral-100 bg-neutral-50/50">
+                {acc.content}
+              </div>
+            )}
+          </div>
+        ))}
       </div>
 
     </div>

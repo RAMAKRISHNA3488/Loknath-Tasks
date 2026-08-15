@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#06080D] text-slate-100 font-sans selection:bg-[#00F0FF] selection:text-black;
+  }
+}
+
+/* Custom scrollbar & glassmorphism utilities */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #06080D;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1F2B42;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #00F0FF;
+}
+
+.glass-panel {
+  background: rgba(19, 26, 41, 0.75);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
